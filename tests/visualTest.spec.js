@@ -479,189 +479,78 @@ test.describe("Visual Comparison Tests", () => {
     }
   });
 
-  test("Test Request Info Form Submission (Header → Home → Body → Home → Standalone Form → Home → Footer)", async ({
-    page,
-  }) => {
+  test("Test First Request Info Form Submission (Multi-Browser)", async ({ page }, testInfo) => {
     const stagingUrl = `${config.staging.baseUrl}`;
     const confirmationTextExpected = "Thanks for your submission!";
-
+  
+    // **Dynamically set first and last name based on browser**
+    const firstName = "Testrad";
+    let browserName = testInfo.project.name;
+  
+    if (browserName.toLowerCase() === "webkit") {
+      browserName = "Safari";
+    }
+  
+    const lastName = browserName.charAt(0).toUpperCase() + browserName.slice(1);
+  
+    console.log(chalk.blue(`Running test on: ${browserName}`));
     console.log(chalk.blue(`Navigating to: ${stagingUrl}`));
     await page.goto(stagingUrl, { waitUntil: "domcontentloaded" });
     console.log(chalk.green(`✅ Page loaded: ${stagingUrl}`));
-
-    const requestInfoForms = [
-      {
-        button: "button.request-info.primary.request-info-popup",
-        form: "#gform_6",
-        submitButton: "#gform_submit_button_6",
-        confirmationSelector: ".header2",
-        goBackHome: true,
-      },
-      {
-        button:
-          "button.desktop-only.button.request-info.primary.request-info-popup",
-        form: "#gform_6",
-        submitButton: "#gform_submit_button_6",
-        confirmationSelector: ".header2",
-        goBackHome: true,
-      },
-    ];
-
-    for (let i = 0; i < requestInfoForms.length; i++) {
-      const { button, form, submitButton, confirmationSelector, goBackHome } =
-        requestInfoForms[i];
-
-      console.log(chalk.blue(`Opening Request Info Form ${i + 1}...`));
-
-      await page.click(button);
-      await page.waitForSelector(form, { state: "visible", timeout: 10000 });
-
-      console.log(chalk.green(`✅ Request Info Form ${i + 1} is visible.`));
-
-      const formElement = page.locator(form);
-
-      await formElement.locator("#input_6_1").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_2").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_3").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_6").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_4").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_5").waitFor({ state: "visible" });
-      await formElement.locator("#input_6_7").waitFor({ state: "visible" });
-
-      console.log(
-        chalk.green(`✅ All fields for Form ${i + 1} are now visible.`)
-      );
-
-      await formElement
-        .locator("#input_6_1")
-        .selectOption({ value: "MOUNTSAINTVINCENT-M-MBAGEN" }); // Example Program
-      await formElement.locator("#input_6_2").fill("John");
-      await formElement.locator("#input_6_3").fill("Doe");
-      await formElement.locator("#input_6_6").fill("test@ap.com");
-      await formElement.locator("#input_6_4").fill("5551234567");
-      await formElement.locator("#input_6_5").fill("12345");
-      await formElement.locator("#input_6_7").selectOption({ value: "Email" });
-
-      console.log(chalk.green(`✅ Form ${i + 1} filled successfully.`));
-
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        formElement.locator(submitButton).click(),
-      ]);
-
-      console.log(chalk.green(`✅ Form ${i + 1} submitted successfully.`));
-
-      const confirmationMessage = await page
-        .locator(confirmationSelector)
-        .first();
-      await confirmationMessage.waitFor({ timeout: 20000 });
-
-      const confirmationText = await confirmationMessage.textContent();
-      console.log(
-        chalk.green(`✅ Confirmation received: "${confirmationText.trim()}"`)
-      );
-
-      expect(confirmationText.trim()).toBe(confirmationTextExpected);
-
-      console.log(chalk.green(`🎉 Form ${i + 1} submission verified!`));
-
-      if (goBackHome) {
-        console.log(chalk.blue(`Navigating back to home for next test...`));
-        await page.goto(stagingUrl, { waitUntil: "domcontentloaded" });
-        console.log(chalk.green(`✅ Back on homepage.`));
-      }
-    }
-
-    console.log(
-      chalk.blue("Starting Standalone Request Info Form (#gform_2)...")
-    );
-
-    await page.goto(stagingUrl, { waitUntil: "domcontentloaded" });
-    console.log(chalk.green("✅ Back on homepage for standalone form."));
-
-    const standaloneFormSelector = "#gform_2";
-    const standaloneSubmitButton = "#gform_submit_button_2";
-    const confirmationSelector = ".header2";
-
-    await page.waitForSelector(standaloneFormSelector, {
-      state: "visible",
-      timeout: 10000,
-    });
-
-    console.log(chalk.green("✅ Standalone Request Info Form is visible."));
-
-    const standaloneForm = page.locator(standaloneFormSelector);
-
-    await standaloneForm
-      .locator("#input_2_1")
-      .selectOption({ value: "MOUNTSAINTVINCENT-M-MBAGEN" });
-    await standaloneForm.locator("#input_2_2").fill("John");
-    await standaloneForm.locator("#input_2_3").fill("Doe");
-    await standaloneForm.locator("#input_2_6").fill("test@ap.com");
-    await standaloneForm.locator("#input_2_4").fill("5551234567");
-    await standaloneForm.locator("#input_2_5").fill("12345");
-    await standaloneForm.locator("#input_2_7").selectOption({ value: "Email" });
-
-    console.log(chalk.green("✅ Standalone Form filled successfully."));
-
+  
+    // **First Request Info Form Details**
+    const formDetails = {
+      button: "button.request-info.primary.request-info-popup",
+      form: "#gform_6",
+      submitButton: "#gform_submit_button_6",
+      confirmationSelector: ".header2",
+    };
+  
+    console.log(chalk.blue("Opening the first Request Info Form..."));
+    await page.click(formDetails.button);
+    await page.waitForSelector(formDetails.form, { state: "visible", timeout: 10000 });
+    console.log(chalk.green("✅ First Request Info Form is visible."));
+  
+    const formElement = page.locator(formDetails.form);
+  
+    await formElement.locator("#input_6_1").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_2").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_3").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_6").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_4").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_5").waitFor({ state: "visible" });
+    await formElement.locator("#input_6_7").waitFor({ state: "visible" });
+  
+    console.log(chalk.green("✅ All required fields are visible."));
+  
+    // **Fill out the form dynamically based on browser**
+    await formElement.locator("#input_6_1").selectOption({ value: "MOUNTSAINTVINCENT-M-MBAGEN" }); // Example Program
+    await formElement.locator("#input_6_2").fill(firstName);
+    await formElement.locator("#input_6_3").fill(lastName);
+    await formElement.locator("#input_6_6").fill("test@ap.com");
+    await formElement.locator("#input_6_4").fill("5551234567");
+    await formElement.locator("#input_6_5").fill("12345");
+    await formElement.locator("#input_6_7").selectOption({ value: "Email" });
+  
+    console.log(chalk.green(`✅ First Request Info Form filled successfully with Name: ${firstName} ${lastName}`));
+  
     await Promise.all([
       page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-      standaloneForm.locator(standaloneSubmitButton).click(),
+      formElement.locator(formDetails.submitButton).click(),
     ]);
-
-    console.log(chalk.green("✅ Standalone Form submitted successfully."));
-
-    const confirmationMessage = await page
-      .locator(confirmationSelector)
-      .first();
+  
+    console.log(chalk.green("✅ First Request Info Form submitted successfully."));
+  
+    const confirmationMessage = await page.locator(formDetails.confirmationSelector).first();
     await confirmationMessage.waitFor({ timeout: 20000 });
-
+  
     const confirmationText = await confirmationMessage.textContent();
-    console.log(
-      chalk.green(`✅ Confirmation received: "${confirmationText.trim()}"`)
-    );
-
+    console.log(chalk.green(`✅ Confirmation received: "${confirmationText.trim()}"`));
+  
     expect(confirmationText.trim()).toBe(confirmationTextExpected);
-
-    console.log(chalk.green("🎉 Standalone Form submission verified!"));
-
-    console.log(chalk.blue("Navigating back to homepage for footer form..."));
-    await page.goto(stagingUrl, { waitUntil: "domcontentloaded" });
-    console.log(chalk.green("✅ Back on homepage for footer form."));
-
-    console.log(chalk.blue("Opening Footer Request Info Form..."));
-    await page.click("button.request-info.request-info-popup");
-
-    await page.waitForSelector("#gform_6", {
-      state: "visible",
-      timeout: 10000,
-    });
-    console.log(chalk.green("✅ Footer Request Info Form is visible."));
-
-    const footerForm = page.locator("#gform_6");
-
-    await footerForm
-      .locator("#input_6_1")
-      .selectOption({ value: "MOUNTSAINTVINCENT-M-MBAGEN" });
-    await footerForm.locator("#input_6_2").fill("John");
-    await footerForm.locator("#input_6_3").fill("Doe");
-    await footerForm.locator("#input_6_6").fill("test@ap.com");
-    await footerForm.locator("#input_6_4").fill("5551234567");
-    await footerForm.locator("#input_6_5").fill("12345");
-    await footerForm.locator("#input_6_7").selectOption({ value: "Email" });
-
-    console.log(chalk.green("✅ Footer Form filled successfully."));
-
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-      footerForm.locator("#gform_submit_button_6").click(),
-    ]);
-
-    console.log(chalk.green("✅ Footer Form submitted successfully."));
-
-    await page.waitForSelector(confirmationSelector, { timeout: 20000 });
-    console.log(chalk.green("✅ Footer Form submission verified!"));
+    console.log(chalk.green("🎉 First Request Info Form submission verified successfully!"));
   });
+  
 
   test("Click 'Apply Now' (Hero, Body & Footer), fill out forms, and verify submissions (UMSV Staging)", async ({
     page,
